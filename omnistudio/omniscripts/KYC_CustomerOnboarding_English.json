@@ -1,0 +1,86 @@
+{
+  "_comment": "Design definition of the OmniScript (Type: KYC, SubType: CustomerOnboarding, Language: English). Simplified from the OmniStudio designer for readability.",
+  "type": "KYC",
+  "subType": "CustomerOnboarding",
+  "language": "English",
+  "steps": [
+    {
+      "name": "ApplicantDetails",
+      "type": "Step",
+      "label": "Tell us about yourself",
+      "elements": [
+        { "name": "FirstName", "type": "Text", "required": true },
+        { "name": "LastName", "type": "Text", "required": true },
+        { "name": "BirthDate", "type": "Date", "required": true },
+        { "name": "SSN", "type": "Text", "required": true, "mask": "999-99-9999", "sensitive": true },
+        { "name": "Email", "type": "Email" },
+        { "name": "Phone", "type": "Telephone" },
+        { "name": "Address", "type": "Address Typeahead (Google)", "required": true }
+      ]
+    },
+    {
+      "name": "ValidateIdentity",
+      "type": "Remote Action",
+      "remoteClass": "KycRemoteActions",
+      "remoteMethod": "validateIdentity",
+      "sendJSONPath": "ApplicantDetails",
+      "responseJSONPath": "Validation"
+    },
+    {
+      "name": "BlockIfInvalid",
+      "type": "Set Errors",
+      "conditionalView": "%Validation:isValid% == false",
+      "message": "%Validation:errors%"
+    },
+    {
+      "name": "FinancialProfile",
+      "type": "Step",
+      "label": "Financial profile",
+      "elements": [
+        { "name": "Occupation", "type": "Select", "source": "Picklist: Contact.Occupation__c" },
+        { "name": "EmployerName", "type": "Text" },
+        { "name": "AnnualIncome", "type": "Currency" },
+        { "name": "SourceOfFunds", "type": "Radio", "options": ["Salary", "Investments", "Business", "Inheritance", "Cash"] },
+        { "name": "ExpectedMonthlyDeposit", "type": "Currency" },
+        { "name": "CountryOfResidence", "type": "Select", "default": "US" },
+        { "name": "Citizenship", "type": "Select", "default": "US" },
+        { "name": "IsPEP", "type": "Checkbox", "label": "Are you a politically exposed person?" }
+      ]
+    },
+    {
+      "name": "RunKycChecks",
+      "type": "Integration Procedure Action",
+      "integrationProcedureKey": "KYC_RiskAssessment",
+      "sendJSONPath": "",
+      "responseJSONPath": "Risk"
+    },
+    {
+      "name": "ProductSelection",
+      "type": "Step",
+      "label": "Choose your account",
+      "elements": [
+        { "name": "Products", "type": "Selectable Items", "source": "DataRaptor Extract: DRExtract_EligibleProducts", "input": { "RiskRating": "%Risk:riskRating%" } }
+      ]
+    },
+    {
+      "name": "Disclosures",
+      "type": "Step",
+      "elements": [
+        { "name": "AcceptTerms", "type": "Checkbox", "required": true },
+        { "name": "ESignature", "type": "Signature", "required": true }
+      ]
+    },
+    {
+      "name": "CreateCustomer",
+      "type": "DataRaptor Post Action",
+      "bundle": "DRLoad_KycApplicant"
+    },
+    {
+      "name": "Confirmation",
+      "type": "Step",
+      "elements": [
+        { "name": "Summary", "type": "Text Block", "html": "Thanks %ApplicantDetails:FirstName%! Application %CreateCustomer:ApplicationNumber% is <b>%Risk:status%</b>." }
+      ]
+    }
+  ]
+}
