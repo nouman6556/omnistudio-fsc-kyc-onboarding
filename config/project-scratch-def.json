@@ -1,0 +1,6 @@
+{
+  "orgName": "OmniStudio KYC Demo",
+  "edition": "Developer",
+  "features": ["EnableSetPasswordInApi"],
+  "settings": { "lightningExperienceSettings": { "enableS1DesktopEnabled": true } }
+}
