@@ -1,0 +1,19 @@
+{
+  "_comment": "FlexCard for the Person Account page. Shows KYC status and risk, with an action to relaunch the OmniScript.",
+  "name": "KYC_ApplicantStatus",
+  "dataSource": { "type": "Integration Procedure", "key": "KYC_RiskAssessment", "input": { "AccountId": "{recordId}" } },
+  "states": [
+    {
+      "name": "HighRisk",
+      "condition": "{riskRating} == 'High'",
+      "style": "slds-theme_error",
+      "fields": ["riskRating", "riskScore", "riskFactors", "screeningStatus"],
+      "actions": [{ "label": "Open Compliance Case", "type": "Navigate", "target": "Case" }]
+    },
+    {
+      "name": "Default",
+      "fields": ["status", "riskRating", "screeningStatus"],
+      "actions": [{ "label": "Update KYC", "type": "OmniScript", "target": "KYC/CustomerOnboarding/English" }]
+    }
+  ]
+}
