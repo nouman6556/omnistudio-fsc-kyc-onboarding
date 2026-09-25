@@ -1,0 +1,49 @@
+{
+  "_comment": "Integration Procedure KYC_RiskAssessment. Runs sanctions screening and risk scoring server-side in one round trip. Response cached per session (cache block).",
+  "type": "KYC",
+  "subType": "RiskAssessment",
+  "steps": [
+    {
+      "name": "ScreenSanctions",
+      "type": "Remote Action",
+      "remoteClass": "KycRemoteActions",
+      "remoteMethod": "screenSanctions",
+      "additionalInput": { "FirstName": "%ApplicantDetails:FirstName%", "LastName": "%ApplicantDetails:LastName%" },
+      "_productionNote": "Swap for an HTTP Action using the Named Credential of your watch-list provider (e.g. LexisNexis Bridger, Refinitiv World-Check)."
+    },
+    {
+      "name": "CalculateRisk",
+      "type": "Remote Action",
+      "remoteClass": "KycRemoteActions",
+      "remoteMethod": "calculateRiskScore",
+      "additionalInput": {
+        "CountryOfResidence": "%FinancialProfile:CountryOfResidence%",
+        "Citizenship": "%FinancialProfile:Citizenship%",
+        "Occupation": "%FinancialProfile:Occupation%",
+        "IsPEP": "%FinancialProfile:IsPEP%",
+        "ExpectedMonthlyDeposit": "%FinancialProfile:ExpectedMonthlyDeposit%",
+        "SourceOfFunds": "%FinancialProfile:SourceOfFunds%",
+        "SanctionsHit": "%ScreenSanctions:SanctionsHit%"
+      }
+    },
+    {
+      "name": "SetStatus",
+      "type": "Set Values",
+      "values": {
+        "status": "=IF(%CalculateRisk:riskRating% == 'High', 'Pending Compliance Review', 'Approved')"
+      }
+    },
+    {
+      "name": "Response",
+      "type": "Response Action",
+      "sendJSONNode": {
+        "riskScore": "%CalculateRisk:riskScore%",
+        "riskRating": "%CalculateRisk:riskRating%",
+        "riskFactors": "%CalculateRisk:riskFactors%",
+        "requiresEDD": "%CalculateRisk:requiresEDD%",
+        "screeningStatus": "%ScreenSanctions:screeningStatus%",
+        "status": "%SetStatus:status%"
+      }
+    }
+  ]
+}
