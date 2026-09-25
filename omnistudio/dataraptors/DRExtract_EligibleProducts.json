@@ -1,0 +1,12 @@
+{
+  "_comment": "DataRaptor Turbo Extract. Returns active deposit products; high-risk applicants are limited to basic checking until review.",
+  "name": "DRExtract_EligibleProducts",
+  "type": "Turbo Extract",
+  "sObject": "Product2",
+  "filters": [
+    { "field": "IsActive", "operator": "=", "value": "true" },
+    { "field": "Family", "operator": "=", "value": "Deposit" },
+    { "field": "Max_Risk_Rating__c", "operator": "INCLUDES", "value": "RiskRating" }
+  ],
+  "fields": ["Id", "Name", "ProductCode", "Description", "Monthly_Fee__c", "APY__c"]
+}

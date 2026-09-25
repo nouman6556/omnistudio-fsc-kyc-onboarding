@@ -1,0 +1,45 @@
+{
+  "_comment": "DataRaptor Load. Creates the FSC Person Account, a Financial Account application and a KYC review Case when EDD is required.",
+  "name": "DRLoad_KycApplicant",
+  "type": "Load",
+  "objects": [
+    {
+      "sequence": 1,
+      "sObject": "Account",
+      "recordType": "PersonAccount",
+      "upsertKey": "Email",
+      "mappings": {
+        "ApplicantDetails:FirstName": "FirstName",
+        "ApplicantDetails:LastName": "LastName",
+        "ApplicantDetails:BirthDate": "PersonBirthdate",
+        "ApplicantDetails:Email": "PersonEmail",
+        "ApplicantDetails:Phone": "PersonMobilePhone",
+        "FinancialProfile:Occupation": "FinServ__Occupation__pc",
+        "FinancialProfile:AnnualIncome": "FinServ__AnnualIncome__pc",
+        "Risk:riskRating": "KYC_Risk_Rating__c",
+        "Risk:status": "KYC_Status__c"
+      }
+    },
+    {
+      "sequence": 2,
+      "sObject": "FinServ__FinancialAccount__c",
+      "linkTo": { "FinServ__PrimaryOwner__c": "Account(1).Id" },
+      "mappings": {
+        "ProductSelection:Products:ProductName": "Name",
+        "ProductSelection:Products:ProductCode": "FinServ__FinancialAccountType__c",
+        "'Pending'": "FinServ__Status__c"
+      }
+    },
+    {
+      "sequence": 3,
+      "sObject": "Case",
+      "condition": "%Risk:requiresEDD% == true",
+      "linkTo": { "AccountId": "Account(1).Id" },
+      "mappings": {
+        "'KYC Enhanced Due Diligence'": "Subject",
+        "Risk:riskFactors": "Description",
+        "'High'": "Priority"
+      }
+    }
+  ]
+}
